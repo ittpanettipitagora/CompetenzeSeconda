@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro Competenze</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+  --bg: #f0ede8;
+  --surface: #ffffff;
+  --surface2: #f7f5f2;
+  --border: #d4cfc8;
+  --border-strong: #a89e93;
+  --text: #1a1714;
+  --text-muted: #6b6359;
+  --accent: #2563eb;
+  --accent-light: #dbeafe;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --materia-char: #7c3aed;
+  --materia-char-bg: #ede9fe;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+  --font: 'IBM Plex Sans', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ---- HEADER ---- */
+.app-header {
+  background: var(--text);
+  color: #fff;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-left { display: flex; flex-direction: column; }
+.app-header h1 { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-family: var(--mono); }
+.app-header .subtitle { font-size: 11px; color: #9ca3af; font-family: var(--mono); margin-top: 2px; }
+
+.btn-salva-main {
+  background: var(--green); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity 0.2s;
+}
+.btn-salva-main:hover { opacity: 0.9; }
+.btn-salva-main:disabled { background: #9ca3af; cursor: not-allowed; }
+
+/* ---- TABS ---- */
+.tabs-bar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; padding: 0 16px; gap: 2px; scrollbar-width: none; }
+.tabs-bar::-webkit-scrollbar { display: none; }
+.tab-btn { padding: 10px 16px; font-size: 12px; font-weight: 500; font-family: var(--font); border: none; background: none; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; transition: all .15s; }
+.tab-btn:hover { color: var(--text); background: var(--surface2); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab-btn.alert-tab { color: var(--red); }
+.tab-btn.alert-tab.active { border-bottom-color: var(--red); }
+
+/* ---- MAIN CONTENT ---- */
+.page { display: none; padding: 20px 24px; }
+.page.active { display: block; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+.card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--surface2); }
+.card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); font-family: var(--mono); }
+.badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 600; font-family: var(--mono); }
+.badge-purple { background: var(--materia-char-bg); color: var(--materia-char); }
+
+.classe-setup { padding: 20px; background:#f0fdf4; border-bottom:1px solid #bbf7d0; display: flex; align-items: center; justify-content: space-between;}
+.classe-titolo-grande { font-size: 20px; font-weight: 700; color: #166534; font-family: var(--mono);}
+
+.num-alunni-badge { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--accent-light); color: var(--accent); border-radius: 6px; font-size: 13px; font-weight: 600; font-family: var(--mono); }
+.alunni-list { padding: 0 20px 20px; }
+.alunni-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; margin-top: 12px; }
+.alunno-chip { padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: var(--mono); color: var(--text); display: flex; align-items: center; gap: 6px; }
+.alunno-num { font-size: 10px; color: var(--text-muted); min-width: 16px; }
+
+.info-box { margin: 20px 20px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px; font-size: 12px; color: #92400e; line-height: 1.5; }
+
+/* ---- GRIGLIA VOTI ---- */
+.table-wrapper { overflow-x: auto; max-height: 70vh; }
+.griglia-table { border-collapse: collapse; width: max-content; min-width: 100%; font-size: 12px; }
+.griglia-table th, .griglia-table td { border: 1px solid var(--border); padding: 0; white-space: nowrap; }
+.griglia-table thead th { background: var(--surface2); padding: 8px 10px; font-weight: 600; font-size: 11px; text-align: center; position: sticky; top: 0; z-index: 10; }
+.griglia-table thead th.materia-char { background: var(--materia-char-bg); color: var(--materia-char); }
+.griglia-table thead th.col-alunno { text-align: left; min-width: 200px; left: 0; z-index: 20; background: var(--surface2); }
+.griglia-table tbody tr:hover td { background: #f0f4ff; }
+.griglia-table tbody td.col-alunno { padding: 6px 10px; font-size: 11px; font-family: var(--mono); background: var(--surface); position: sticky; left: 0; z-index: 5; border-right: 2px solid var(--border-strong); }
+.griglia-table tbody td.col-voto { text-align: center; min-width: 80px; }
+.griglia-table tbody td.col-voto.disabled { background: #f3f4f6; color: #9ca3af; font-family: var(--mono); }
+
+.voto-select { width: 100%; border: none; background: transparent; font-family: var(--font); font-size: 12px; text-align: center; cursor: pointer; padding: 6px 4px; outline: none; color: var(--text); }
+.voto-select:focus { background: var(--accent-light); }
+
+td.level-1 { background: #fef2f2 !important; } td.level-2 { background: #fffbeb !important; } td.level-3 { background: #f0fdf4 !important; } td.level-4 { background: #eff6ff !important; }
+
+/* Livello pills */
+.livello-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; font-family: var(--mono); text-transform: uppercase; }
+.livello-pill.l1 { background: #fef2f2; color: #b91c1c; } .livello-pill.l2 { background: #fffbeb; color: #92400e; } .livello-pill.l3 { background: #f0fdf4; color: #15803d; } .livello-pill.l4 { background: #eff6ff; color: #1d4ed8; }
+.livello-pill.empty { background: #f3f4f6; color: #9ca3af; }
+
+/* ---- COMPETENZA PAGES ---- */
+.comp-header-bar { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--surface2); flex-wrap: wrap; gap: 8px; }
+.comp-title { font-size: 14px; font-weight: 600; } .comp-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.char-note { font-size: 11px; color: var(--materia-char); background: var(--materia-char-bg); padding: 4px 10px; border-radius: 4px; font-weight: 500; }
+
+/* ---- RIEPILOGO ---- */
+.riepilogo-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.riepilogo-table th, .riepilogo-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
+.riepilogo-table th { background: var(--surface2); font-weight: 600; font-size: 11px; position: sticky; top: 0; }
+.riepilogo-table th.col-alunno { text-align: left; min-width: 200px; } .riepilogo-table td.col-alunno { text-align: left; font-family: var(--mono); font-size: 11px; }
+.riepilogo-table tbody tr:hover td { background: #f0f4ff; }
+
+/* ---- ALERT PAGE ---- */
+.alert-list { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+.alert-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); }
+.alert-item.ok { background: var(--green-light); border-color: #86efac; } .alert-item.warning { background: var(--red-light); border-color: #fca5a5; }
+.alert-item-icon { font-size: 18px; line-height: 1; } .alert-item-body { flex: 1; }
+.alert-item-comp { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-family: var(--mono); }
+.alert-item-msg { font-size: 13px; margin-top: 2px; } .alert-item.ok .alert-item-msg { color: var(--green); font-weight: 500; } .alert-item.warning .alert-item-msg { color: var(--red); }
+
+/* ---- LEGENDA ---- */
+.legenda-grid { display: flex; gap: 8px; padding: 16px 20px; flex-wrap: wrap; }
+.legenda-item { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 500; }
+.legenda-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); padding: 12px 20px 4px; }
+@media (max-width: 600px) { .app-header h1 { font-size: 11px; } .page { padding: 12px; } }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-left">
+    <h1>Registro Competenze</h1>
+    <div class="subtitle" id="header-classe">Caricamento in corso...</div>
+  </div>
+  <button id="btn-salva" class="btn-salva-main" onclick="salvaTutto()" disabled>💾 Salva Dati</button>
+</header>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="showTab('elenco')">📋 Elenco Alunni</button>
+  <button class="tab-btn" onclick="showTab('generale')">📊 Generale</button>
+  <button class="tab-btn" onclick="showTab('comp1')">① Alfabetica</button>
+  <button class="tab-btn" onclick="showTab('comp2')">② Multilinguistica</button>
+  <button class="tab-btn" onclick="showTab('comp3')">③ Matematica/Scienze</button>
+  <button class="tab-btn" onclick="showTab('comp4')">④ Digitale</button>
+  <button class="tab-btn" onclick="showTab('comp5')">⑤ Imparare a Imparare</button>
+  <button class="tab-btn" onclick="showTab('comp6')">⑥ Cittadinanza</button>
+  <button class="tab-btn" onclick="showTab('comp7')">⑦ Imprenditoriale</button>
+  <button class="tab-btn" onclick="showTab('comp8')">⑧ Espressione Culturale</button>
+  <button class="tab-btn" onclick="showTab('riepilogo')">📈 Riepilogo</button>
+  <button class="tab-btn alert-tab" onclick="showTab('alert')" id="alert-tab-btn">⚠️ Alert</button>
+</div>
+
+<div class="page active" id="page-elenco">
+  <div class="card">
+    <div class="classe-setup">
+      <div class="classe-titolo-grande" id="titolo-sezione-classe">Classe in caricamento...</div>
+      <div id="num-alunni-badge" class="num-alunni-badge" style="display:none">
+        👤 <span id="num-alunni-val">0</span> alunni
+      </div>
+    </div>
+    <div class="info-box">
+      ℹ️ L'app è collegata al database ed è bloccata esclusivamente su questa classe. I dati inseriti si sincronizzano con il cloud quando clicchi su <strong>Salva Dati</strong> in alto a destra.
+    </div>
+    <div class="section-title">Alunni in classe</div>
+    <div class="alunni-list">
+      <div class="alunni-grid" id="alunni-grid">
+        <div style="padding:40px; text-align:center; color:var(--text-muted); width: 100%;">⏳ <strong>Caricamento e sincronizzazione in corso...</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-generale">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Valutazione Generale</span><span class="badge badge-purple">* valutazione obbligatoria a cura di tutte le materie</span></div>
+    <div class="legenda-grid">
+      <div class="legenda-item" style="background:#fef2f2;border-color:#fca5a5"><div class="legenda-dot" style="background:#ef4444"></div>1 — INIZIALE</div>
+      <div class="legenda-item" style="background:#fffbeb;border-color:#fcd34d"><div class="legenda-dot" style="background:#f59e0b"></div>2 — BASE</div>
+      <div class="legenda-item" style="background:#f0fdf4;border-color:#86efac"><div class="legenda-dot" style="background:#22c55e"></div>3 — INTERMEDIO</div>
+      <div class="legenda-item" style="background:#eff6ff;border-color:#93c5fd"><div class="legenda-dot" style="background:#3b82f6"></div>4 — AVANZATO</div>
+    </div>
+    <div class="table-wrapper" id="generale-table-wrapper"></div>
+  </div>
+</div>
+
+<div class="page" id="page-comp1"><div class="card"><div class="comp-header-bar"><div><div class="comp-title">1 — Competenza alfabetica funzionale</div><div class="comp-subtitle">Materie caratterizzanti: Italiano, Storia, Inglese, Ed. Civica, IRC</div></div></div><div class="table-wrapper" id="comp1-table-wrapper"></div></div></div>
+<div class="page" id="page-comp2"><div class="card"><div class="comp-header-bar"><div><div class="comp-title">2 — Competenza multilinguistica</div><div class="comp-subtitle">Materia caratterizzante: Inglese</div></div></div><div class="table-wrapper" id="comp2-table-wrapper"></div></div></div>
+<div class="page" id="page-comp3"><div class="card"><div class="comp-header-bar"><div><div class="comp-title">3 — Competenza matematica e in scienze, tecnologie e ingegneria</div><div class="comp-subtitle">Materie caratterizzanti: Matematica, Chimica, Fisica, Scienze, TTRG, STA</div></div></div><div class="table-wrapper" id="comp3-table-wrapper"></div></div></div>
+<div class="page" id="page-comp4"><div class="card"><div class="comp-header-bar"><div><div class="comp-title">4 — Competenza digitale</div><div class="comp-subtitle">Materie caratterizzanti: Matematica, Fisica, TTRG, STA</div></div></div><div class="table-wrapper" id="comp4-table-wrapper"></div></div></div>
+<div class="page" id="page-comp5"><div class="card"><div class="comp-header-bar"><div><div class="comp-title">5 — Personale, sociale e imparare a imparare</div><div class="comp-subtitle">Materie caratterizzanti: Italiano, Storia, Ed. Civica, Scienze Motorie, IRC</div></div></div><div class="table-wrapper" id="comp5-table-wrapper"></div></div></div>
+<div class="page" id="page-comp6"><div class="card"><div class="comp-header-bar"><div><div class="comp-title">6 — Competenza in materia di cittadinanza</div><div class="comp-subtitle">Materie caratterizzanti: Italiano, Storia, Ed. Civica, Diritto, IRC</div></div></div><div class="table-wrapper" id="comp6-table-wrapper"></div></div></div>
+<div class="page" id="page-comp7"><div class="card"><div class="comp-header-bar"><div><div class="comp-title">7 — Competenza imprenditoriale</div><div class="comp-subtitle">Materie caratterizzanti: Matematica, TTRG, Ed. Civica, STA, Scienze Motorie</div></div></div><div class="table-wrapper" id="comp7-table-wrapper"></div></div></div>
+<div class="page" id="page-comp8"><div class="card"><div class="comp-header-bar"><div><div class="comp-title">8 — Consapevolezza ed espressione culturali</div><div class="comp-subtitle">Materie caratterizzanti: Italiano, Storia, Inglese, IRC</div></div></div><div class="table-wrapper" id="comp8-table-wrapper"></div></div></div>
+
+<div class="page" id="page-riepilogo">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Riepilogo Competenze</span></div>
+    <div class="table-wrapper" id="riepilogo-table-wrapper"></div>
+  </div>
+</div>
+
+<div class="page" id="page-alert">
+  <div class="card">
+    <div class="card-header"><span class="card-title">⚠️ Controllo Compilazione</span></div>
+    <div class="alert-list" id="alert-list"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 🎯 IMPOSTAZIONE CLASSE (CAMBIARE SOLO QUESTO VALORE!)
+// ============================================================
+const CLASSE_ATTUALE = "2G";  // <-- SOSTITUISCI "2A" CON "2B", "2C", ECC. IN OGNI FILE
+// ============================================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAlK-hnw92Flf3-M3HBp1T5hGodjAjECnE",
+  authDomain: "registrocompetenze-ac4fb.firebaseapp.com",
+  projectId: "registrocompetenze-ac4fb",
+  storageBucket: "registrocompetenze-ac4fb.firebasestorage.app",
+  messagingSenderId: "954190679375",
+  appId: "1:954190679375:web:bc71cd19c1bb1896c4093a"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ============================================================
+// DATI SCUOLA
+// ============================================================
+const ELENCO_SCUOLA = [
+  ["CANNITO FRANCESCO","2A"],["CARICOLA GIORGIA","2A"],["CITELLI STEFANIA","2A"],["DAMIANI FRANCESCO","2A"],["DI GIOIA DANIEL","2A"],["FALCO GABRIEL","2A"],["FALLACARA GIUSEPPE","2A"],["GALLIANO COSIMO","2A"],["GNONI CHIARA","2A"],["LOGLISCI ANTONELLO","2A"],["MINENNA FRANCESCO","2A"],["MODUGNO MICHELE","2A"],["PALMISANO MICHELE","2A"],["ROBLES SAVERIO","2A"],["SARACINO SAMUELE","2A"],["SICILIANO ALESSIO","2A"],["SPADA GIUSEPPE","2A"],["STRAMAGLIA GABRIELE","2A"],["TERRONE ROCCO","2A"],["TOSCANO GIOVANNI","2A"],["ZACCARIA NOEMI","2A"],
+  ["ANGARANO FEDERICO","2B"],["AVELLINO CHRISTIAN","2B"],["CICINELLI FRANCESCO","2B"],["FORNARELLI ANDREA","2B"],["GURI DEVIS","2B"],["MAGALETTI SIMONA","2B"],["MARI MARTINA","2B"],["MARZULLO LUCA","2B"],["NACHERLILLA MATTIA","2B"],["NODARISHVILI SABA","2B"],["PADOVANO MARCO","2B"],["PAPARELLA ANTONIO","2B"],["PREZIOSA ALESSANDRO","2B"],["SCHIAVONE GIORGIA","2B"],["TRINCI GIUSEPPE","2B"],["VENKETASAMY VALENTINA","2B"],
+  ["ANNOSCIA LUCA","2C"],["BELVISO NICOLA","2C"],["CAFAGNO FRANCESCO","2C"],["CALDARULO DAVIDE","2C"],["CAMPO GABRIELE","2C"],["CATACCHIO GABRIELE","2C"],["COLETTA DOMENICO","2C"],["CORDASCO DAVIDE","2C"],["DELLA CHIESA GIUSEPPE","2C"],["DENTAMARO ANTONIO","2C"],["EL BAHLOULI BILAL","2C"],["KHAN SAIF","2C"],["LOTRIGLIO SAMUEL","2C"],["MARCHITELLI GIUSEPPE","2C"],["MENOLASCINA DANIELE","2C"],["MICCOLI KEVIN","2C"],["NIGATU SILAS FITSUM","2C"],["PASTORE ROSSI FRANCESCO","2C"],["SCIANATICO ROBERT ANTHONY","2C"],["SIGNORILE STEFANO","2C"],["TRICARICO VITO","2C"],["VERRASTRO MARCO","2C"],
+  ["ABBINANTE CHRISTIAN","2D"],["ANTONICELLI FRANCESCO PIO","2D"],["BONERBA MARCO","2D"],["BOTTALICO MATTEO","2D"],["CERIOLA ALESSANDRO","2D"],["CHIECHI SAMUELE","2D"],["CLARIZIO GABRIELE","2D"],["D'ERASMO NICOLA","2D"],["FINESTRONE DAVIDE","2D"],["GELAO MARCO","2D"],["GIAMMARIA DOMENICO","2D"],["GIORDANO FABRIZIO","2D"],["GRANATA ISABEL","2D"],["IACOBONE MICHELE RAFFAELE","2D"],["IUSCO DOMINICK","2D"],["LOSACCO GAETANO","2D"],["MASELLI FLAVIO","2D"],["MASTRONARDI MICHELE","2D"],["MIZZI MARZIA","2D"],["PARTIPILO MICHELE","2D"],["SILECCHIA COSIMO DAMIANO","2D"],["UNGARO EMANUELE","2D"],["VITI VALENTINA","2D"],["ZONNO LUIGI","2D"],
+  ["ANTONACCI ANDREA","2E"],["BERNARDIS VITO PIO","2E"],["BOTTA ALESSANDRO","2E"],["CARANNANTE GABRIELE","2E"],["CHIBELLI MARTINA","2E"],["CIPOLLA GABRIELE","2E"],["FABBRONI GIULIO","2E"],["FIORE SABINO FRANCESCO","2E"],["HASAN IQBAL MEHRAB","2E"],["JIN YILE","2E"],["LAPOLLA VINCENZO","2E"],["MONTESANO MATTEO FRANCESCO","2E"],["NONIKASHVILI MARIAMI","2E"],["PAPA EMANUELE BRUNO","2E"],["PASTORE FELICE","2E"],["PITEO GABRIELE KAROL","2E"],["PLANTAMURA GIUSEPPE","2E"],["RAM ALESSIA","2E"],["SASSO LEONARDO","2E"],["SCAVO IRENE","2E"],["TRAIANI DANIELE","2E"],["TRIGGIANESE GIAMBATTISTA","2E"],["ZIPPARI GIUSEPPE","2E"],
+  ["ALBERGO FRANCESCO","2F"],["ANNOSCIA NICCOLO'","2F"],["BELLONE DE GRECIS GIUSEPPE","2F"],["CAPOZZI BENITO VITTORIO","2F"],["CAPUTO GIUSEPPE","2F"],["CARONE MIRKO","2F"],["CASTELLANO GABRIELE","2F"],["CIARFAGLIA LORENZO","2F"],["CIRACI GABRIEL","2F"],["COLANGIULI DARIO","2F"],["DE COSMO NICOLA","2F"],["DE TULLIO RAFFAELE","2F"],["DELCARMINE NICOLA","2F"],["DENTUTO CRISTIAN","2F"],["EVANGELISTA DOMENICO","2F"],["GENCHI CARMINE MATTIA","2F"],["INSALATA CHRISTIAN","2F"],["IUSCO ANTONIO","2F"],["LACALAMITA CHRISTIAN","2F"],["MURGU LEONARDO CONSTANTIN","2F"],["NACCI ALESSIO","2F"],["PETTI GABRIELE","2F"],["SCIANNIMANICO GIUSEPPE","2F"],
+  ["BELVISO MARCO","2G"],["CAGGIANELLI SAMUEL","2G"],["CAPRIATI DANIELE","2G"],["CARBONARA GABRIELE","2G"],["CAVONE ELEONORA","2G"],["CUCUMAZZO NICOLAS","2G"],["D'ELIA LEONARDO","2G"],["DI CAGNO MICHELE","2G"],["DIFILIPPO FLAVIO","2G"],["FATTIZZI GIANROCCO","2G"],["FORTUNATO VINCENZO","2G"],["GERADZE ANANO","2G"],["INTRONA JOSEPH","2G"],["KRASNIQI XHEMSIJAN","2G"],["LARICCHIA SAVERIO","2G"],["LOIACONO NICOLAS","2G"],["LORUSSO GABRIELE","2G"],["MITARITONNO DAVIDE","2G"],["RICCHIARI CARLO","2G"],["SCHIRALDI CHERTI DANIELE","2G"],["SCIACOVELLI LORENZO","2G"],["TRIGGIANI CHRISTIAN","2G"],["VALLONE SAMUELE","2G"],["YE WANER","2G"],
+  ["ABBATICCHIO DENNIS","2H"],["ABBRESCIA NICOLO'","2H"],["AMORUSO DILETTA","2H"],["ARMENISE SAVERIO","2H"],["BERARDI FRANCESCO","2H"],["BOCCUTO CRISTIAN","2H"],["BOGGIA ENRICO","2H"],["CALIA FRANCESCO","2H"],["COLAPIETRO DANIEL","2H"],["CUTRIGNELLI MARCO","2H"],["GUERRA GABRIELE","2H"],["MILELLA MAURIZIO","2H"],["MONTARULO NICOLE","2H"],["PISANELLI NICOLA","2H"],["RIZZUTI MATTIA","2H"],["ROTUNNO GABRIEL","2H"],["RUGGIERI FRANCESCO","2H"],["SFORZA GIUSEPPE","2H"],["SPATARO DANIELE","2H"],["SPILOTROS NICOLO'","2H"],["TANGORRA DAVIDE","2H"],["TEDESCHI GABRIELE","2H"],["TUNZI NICOLA","2H"],["VIGNOLA ANDREA","2H"],
+  ["AGOLLI ARMANDA","2I"],["ANACLERIO FRANCESCO","2I"],["ANACLERIO NICOLE","2I"],["BRANDONISIO BENITO","2I"],["BRUNO NICOLAS","2I"],["BULABON JARED JOSEPH","2I"],["D'ALESIO FABIO","2I"],["DE IURE ERIKA","2I"],["DE SANTIS CRISTIAN","2I"],["DI PALMA MICHELE","2I"],["FRADDOSIO TERESA","2I"],["LATORRE MARCO","2I"],["LOPEZ VITO","2I"],["MARI DONATO","2I"],["MASELLI MICHELA","2I"],["ORESTE DANIELE","2I"],["ROSELLI ANDREA","2I"],["SABBATELLI VITO","2I"]
+];
+
+const MATERIE = ["ITALIANO","STORIA","INGLESE","MATEMATICA","CHIMICA","FISICA","SCIENZE","TTRG","ED. CIVICA","STA","SCIENZE MOTORIE","DIRITTO","IRC"];
+const COMP_CONFIG = [
+  {name:"Alfabetica funzionale", char:[0,1,2,8,12]}, {name:"Multilinguistica", char:[2]},
+  {name:"Matematica e Scienze/Tecnologie", char:[3,4,5,6,7,9]}, {name:"Digitale", char:[3,5,7,9]},
+  {name:"Imparare a imparare", char:[0,1,8,10,12]}, {name:"Cittadinanza", char:[0,1,8,11,12]},
+  {name:"Imprenditoriale", char:[3,7,8,9,10]}, {name:"Espressione culturale", char:[0,1,2,12]},
+];
+const LIVELLI = ["","INIZIALE","BASE","INTERMEDIO","AVANZATO"];
+const LIVELLI_MAP = {1:"INIZIALE",2:"BASE",3:"INTERMEDIO",4:"AVANZATO"};
+const LEVEL_COLORS = {1:"level-1",2:"level-2",3:"level-3",4:"level-4"};
+const LIVELLI_PILL_CLS = {1:"l1",2:"l2",3:"l3",4:"l4"};
+
+let alunni = []; let voti = {}; let votiFacoltativi = {}; let avvaleIRC = {}; 
+
+function avviaApp() {
+  document.getElementById('header-classe').textContent = `Classe ${CLASSE_ATTUALE}`;
+  document.getElementById('titolo-sezione-classe').textContent = `Registro: Classe ${CLASSE_ATTUALE}`;
+  
+  alunni = ELENCO_SCUOLA.filter(r=>r[1]===CLASSE_ATTUALE).map(r=>r[0]);
+  caricaClasseDalDatabase();
+}
+
+function caricaClasseDalDatabase() {
+  db.collection("classi").doc(CLASSE_ATTUALE).get().then((doc) => {
+    if (doc.exists) {
+      const data = doc.data();
+      voti = data.voti || {}; votiFacoltativi = data.votiFacoltativi || {}; avvaleIRC = data.avvaleIRC || {};
+      alunni.forEach(a => {
+        if (!voti[a]) { voti[a] = {}; MATERIE.forEach(m => voti[a][m] = 0); }
+        if (!votiFacoltativi[a]) {
+          votiFacoltativi[a] = {};
+          for(let i=0; i<8; i++) { votiFacoltativi[a][i] = {}; MATERIE.forEach(m => votiFacoltativi[a][i][m] = 0); }
+        }
+        if (avvaleIRC[a] === undefined) avvaleIRC[a] = true;
+      });
+    } else {
+      voti = {}; votiFacoltativi = {}; avvaleIRC = {};
+      alunni.forEach(a => {
+        voti[a] = {}; votiFacoltativi[a] = {};
+        for(let i=0; i<8; i++) votiFacoltativi[a][i] = {};
+        MATERIE.forEach(m => { voti[a][m] = 0; for(let i=0; i<8; i++) votiFacoltativi[a][i][m] = 0; });
+        avvaleIRC[a] = true;
+      });
+    }
+    
+    document.getElementById('btn-salva').disabled = false;
+    renderElenco(); renderGenerale(); renderAllComp(); renderRiepilogo(); renderAlert();
+  }).catch((error) => {
+    alert("❌ Errore di connessione a Firebase: " + error.message);
+  });
+}
+
+function salvaTutto() {
+  const btn = document.getElementById('btn-salva');
+  btn.textContent = "⏳ Salvataggio..."; btn.disabled = true;
+
+  db.collection("classi").doc(CLASSE_ATTUALE).set({
+    voti: voti, votiFacoltativi: votiFacoltativi, avvaleIRC: avvaleIRC,
+    ultimoAggiornamento: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    alert("✅ Dati della classe " + CLASSE_ATTUALE + " salvati con successo su Firebase!");
+    btn.textContent = "💾 Salva Dati"; btn.disabled = false;
+  }).catch((error) => {
+    alert("❌ Errore: " + error.message);
+    btn.textContent = "💾 Salva Dati"; btn.disabled = false;
+  });
+}
+
+function renderElenco() {
+  const grid = document.getElementById('alunni-grid');
+  document.getElementById('num-alunni-badge').style.display = 'inline-flex';
+  document.getElementById('num-alunni-val').textContent = alunni.length;
+
+  grid.innerHTML = alunni.map((a,i) => {
+    const avvale = avvaleIRC[a] !== false;
+    return `<div class="alunno-chip" style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:6px"><span class="alunno-num">${i+1}.</span>${a}</span>
+      <button class="irc-toggle-btn" data-idx="${i}" style="font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid;cursor:pointer;background:${avvale?'#dcfce7':'#f3f4f6'};color:${avvale?'#15803d':'#6b7280'};border-color:${avvale?'#86efac':'#d1d5db'};font-family:var(--mono);font-weight:600;">IRC: ${avvale?'SI':'NO'}</button>
+    </div>`;
+  }).join('');
+}
+
+function makeVotoSelect(alunno, materia, isChar, compIdx = -1) {
+  let v = (compIdx === -1 || isChar) ? (voti[alunno]?.[materia] ?? 0) : (votiFacoltativi[alunno]?.[compIdx]?.[materia] ?? 0);
+  let opts = `<option value="0">${isChar ? '* da compilare' : ''}</option>`;
+  for (let i=1;i<=4;i++) opts += `<option value="${i}" ${v===i?'selected':''}>${i} — ${LIVELLI[i]}</option>`;
+  return `<select class="voto-select" onchange="setVoto('${alunno.replace(/'/g,"\\\\'")}','${materia}',+this.value, ${isChar}, ${compIdx})">${opts}</select>`;
+}
+
+function setVoto(alunno, materia, val, isChar, compIdx) {
+  if (compIdx === -1 || isChar) { voti[alunno][materia] = val; renderGenerale(); renderAllComp(); }
+  else { votiFacoltativi[alunno][compIdx][materia] = val; renderCompPage(compIdx); }
+  renderRiepilogo(); renderAlert();
+}
+
+function toggleIRC(alunno) {
+  avvaleIRC[alunno] = !avvaleIRC[alunno];
+  if (!avvaleIRC[alunno]) { voti[alunno]['IRC'] = 0; for(let i=0; i<8; i++) votiFacoltativi[alunno][i]['IRC'] = 0; }
+  renderElenco(); renderGenerale(); renderAllComp(); renderRiepilogo(); renderAlert();
+}
+
+function getCellClass(val) { return val === 0 ? '' : LEVEL_COLORS[val] || ''; }
+
+function renderGenerale() {
+  const wrap = document.getElementById('generale-table-wrapper');
+  let html = `<table class="griglia-table"><thead><tr><th class="col-alunno">ALUNNI — CLASSE ${CLASSE_ATTUALE}</th>`;
+  MATERIE.forEach(m => html += `<th>${m}</th>`); html += `</tr></thead><tbody>`;
+  alunni.forEach(a => {
+    const avvale = avvaleIRC[a] !== false;
+    html += `<tr><td class="col-alunno">${a} <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:${avvale?'#dcfce7':'#fee2e2'};color:${avvale?'#15803d':'#dc2626'};font-family:var(--mono)">${avvale?'IRC:SI':'IRC:NO'}</span></td>`;
+    MATERIE.forEach(m => {
+      const v = voti[a][m];
+      if (m==='IRC' && !avvale) html += `<td class="col-voto disabled" style="font-size:11px;">non si avvale</td>`;
+      else html += `<td class="col-voto ${getCellClass(v)}">${makeVotoSelect(a,m,true, -1)}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`; wrap.innerHTML = html;
+}
+
+function renderCompPage(compIdx) {
+  const cfg = COMP_CONFIG[compIdx]; const wrap = document.getElementById(`comp${compIdx+1}-table-wrapper`);
+  const charSet = new Set(cfg.char);
+  let html = `<table class="griglia-table"><thead><tr><th class="col-alunno">ALUNNI — CLASSE ${CLASSE_ATTUALE}</th>`;
+  MATERIE.forEach((m,mi) => html += `<th class="${charSet.has(mi)?'materia-char':''}">${m}${charSet.has(mi)?' ★':''}</th>`);
+  html += `<th>Alert</th></tr></thead><tbody>`;
+  alunni.forEach(a => {
+    const rowData = computeCompRow(a, cfg, compIdx); 
+    html += `<tr><td class="col-alunno">${a}</td>`;
+    MATERIE.forEach((m,mi) => {
+      const isChar = charSet.has(mi); const ircActive = avvaleIRC[a] !== false;
+      let v = isChar ? voti[a]?.[m] : votiFacoltativi[a]?.[compIdx]?.[m];
+      if (m==='IRC' && !ircActive) html += `<td class="col-voto disabled" style="font-size:10px;">non si avvale</td>`;
+      else html += `<td class="col-voto ${getCellClass(v)} ${isChar?'materia-char':''}">${makeVotoSelect(a,m,isChar, compIdx)}</td>`;
+    });
+    html += `<td style="text-align:center">${rowData.allFilled ? '✅' : '⚠️'}</td></tr>`;
+  });
+  html += `</tbody></table>`; wrap.innerHTML = html;
+}
+
+function computeCompRow(alunno, cfg, compIdx) {
+  const charSet = new Set(cfg.char); let totalPts = 0; let numFilled = 0; let allCharFilled = true;
+  MATERIE.forEach((m, mi) => {
+    if (m === 'IRC' && avvaleIRC[alunno] === false) return;
+    const isChar = charSet.has(mi); let v = isChar ? voti[alunno]?.[m] : votiFacoltativi[alunno]?.[compIdx]?.[m];
+    if (v > 0) { totalPts += v; numFilled++; }
+    if (isChar && (!v || v === 0)) allCharFilled = false;
+  });
+  return { livello: numFilled > 0 ? Math.round(totalPts / numFilled) : 0, allFilled: allCharFilled };
+}
+
+function renderAllComp() { for (let i=0; i<8; i++) renderCompPage(i); }
+
+function renderRiepilogo() {
+  const wrap = document.getElementById('riepilogo-table-wrapper');
+  let html = `<table class="riepilogo-table"><thead><tr><th class="col-alunno">ALUNNI — CLASSE ${CLASSE_ATTUALE}</th>`;
+  for(let i=0;i<8;i++) html+=`<th>Comp. ${i+1}</th>`; html += `</tr></thead><tbody>`;
+  alunni.forEach(a => {
+    html += `<tr><td class="col-alunno">${a}</td>`;
+    for(let i=0;i<8;i++){
+      const lv = computeCompRow(a, COMP_CONFIG[i], i).livello;
+      html += `<td><span class="livello-pill ${lv>0?LIVELLI_PILL_CLS[lv]:'empty'}">${lv>0?LIVELLI_MAP[lv]:'—'}</span></td>`;
+    }
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`; wrap.innerHTML = html;
+}
+
+function renderAlert() {
+  const list = document.getElementById('alert-list'), tab = document.getElementById('alert-tab-btn');
+  let anyAlert = false; let html = '';
+  for(let ci=0;ci<8;ci++){
+    const charSet = new Set(COMP_CONFIG[ci].char); const notFilled = [];
+    charSet.forEach(mi => {
+      const m = MATERIE[mi];
+      if (alunni.some(a => (m!=='IRC' || avvaleIRC[a]!==false) && (!voti[a]?.[m] || voti[a][m]===0))) notFilled.push(m);
+    });
+    if(notFilled.length>0){
+      anyAlert = true; html += `<div class="alert-item warning"><div class="alert-item-icon">⚠️</div><div class="alert-item-body"><div class="alert-item-comp">Competenza ${ci+1}</div><div class="alert-item-msg">Non sono correttamente compilate le seguenti materie: <strong>${notFilled.join(', ')}</strong></div></div></div>`;
+    } else {
+      html += `<div class="alert-item ok"><div class="alert-item-icon">✅</div><div class="alert-item-body"><div class="alert-item-comp">Competenza ${ci+1}</div><div class="alert-item-msg">Tutte le materie obbligatorie sono correttamente compilate</div></div></div>`;
+    }
+  }
+  list.innerHTML = html; tab.textContent = anyAlert ? '⚠️ Alert (' + document.querySelectorAll('.alert-item.warning').length + ')' : '✅ Alert';
+}
+
+function showTab(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+document.addEventListener('change', e => {
+  if(e.target.classList.contains('voto-select')){
+    const td = e.target.closest('td');
+    if(td) { td.classList.remove('level-1','level-2','level-3','level-4'); const v = +e.target.value; if(v>0) td.classList.add('level-'+v); }
+  }
+});
+document.getElementById('alunni-grid').addEventListener('click', e => {
+  const btn = e.target.closest('.irc-toggle-btn');
+  if (btn) toggleIRC(alunni[+btn.dataset.idx]);
+});
+
+window.onload = avviaApp; // Fa partire tutto appena si apre la pagina
+</script>
+</body>
+</html>
