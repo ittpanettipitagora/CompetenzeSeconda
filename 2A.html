@@ -7,7 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="permessi.js"></script>
 
 <style>
 :root {
@@ -147,12 +149,23 @@ td.level-1 { background: #fef2f2 !important; } td.level-2 { background: #fffbeb 
 </head>
 <body>
 
+<div id="login-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+  <div class="card" style="padding: 40px; text-align: center; max-width: 400px; width: 90%;">
+    <h2 style="font-family:var(--mono); margin-bottom: 20px;">Registro Competenze</h2>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 30px;">Accesso riservato ai docenti</p>
+    <button class="btn-salva-main" style="width: 100%; justify-content: center; background: var(--accent);" onclick="doLogin()">Accedi con Google</button>
+  </div>
+</div>
+
 <header class="app-header">
   <div class="header-left">
     <h1>Registro Competenze</h1>
     <div class="subtitle" id="header-classe">Caricamento in corso...</div>
   </div>
-  <button id="btn-salva" class="btn-salva-main" onclick="salvaTutto()" disabled>💾 Salva Dati</button>
+  <div style="display: flex; gap: 10px;">
+    <button id="btn-salva" class="btn-salva-main" onclick="salvaTutto()" disabled>💾 Salva Dati</button>
+    <button onclick="firebase.auth().signOut()" class="btn-salva-main" style="background:var(--red); display:none;" id="btn-logout">Esci</button>
+  </div>
 </header>
 
 <div class="tabs-bar">
@@ -273,6 +286,10 @@ const LIVELLI_PILL_CLS = {1:"l1",2:"l2",3:"l3",4:"l4"};
 
 let alunni = []; let voti = {}; let votiFacoltativi = {}; let avvaleIRC = {}; 
 
+window.utentePermessi = null;
+
+function doLogin() { firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+
 function avviaApp() {
   document.getElementById('header-classe').textContent = `Classe ${CLASSE_ATTUALE}`;
   document.getElementById('titolo-sezione-classe').textContent = `Registro: Classe ${CLASSE_ATTUALE}`;
@@ -336,11 +353,16 @@ function renderElenco() {
   document.getElementById('num-alunni-badge').style.display = 'inline-flex';
   document.getElementById('num-alunni-val').textContent = alunni.length;
 
+  let isIrcDisabilitato = false;
+  if (window.utentePermessi) {
+    isIrcDisabilitato = !(window.utentePermessi.isCoordinatore || window.utentePermessi.materieAbilitate.includes("IRC"));
+  }
+
   grid.innerHTML = alunni.map((a,i) => {
     const avvale = avvaleIRC[a] !== false;
     return `<div class="alunno-chip" style="justify-content:space-between">
       <span style="display:flex;align-items:center;gap:6px"><span class="alunno-num">${i+1}.</span>${a}</span>
-      <button class="irc-toggle-btn" data-idx="${i}" style="font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid;cursor:pointer;background:${avvale?'#dcfce7':'#f3f4f6'};color:${avvale?'#15803d':'#6b7280'};border-color:${avvale?'#86efac':'#d1d5db'};font-family:var(--mono);font-weight:600;">IRC: ${avvale?'SI':'NO'}</button>
+      <button class="irc-toggle-btn" data-idx="${i}" ${isIrcDisabilitato ? 'disabled' : ''} style="font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid;cursor:${isIrcDisabilitato ? 'not-allowed' : 'pointer'};background:${avvale?'#dcfce7':'#f3f4f6'};color:${avvale?'#15803d':'#6b7280'};border-color:${avvale?'#86efac':'#d1d5db'};font-family:var(--mono);font-weight:600;opacity:${isIrcDisabilitato ? '0.5' : '1'}">IRC: ${avvale?'SI':'NO'}</button>
     </div>`;
   }).join('');
 }
@@ -350,7 +372,15 @@ function makeVotoSelect(alunno, materia, isChar, compIdx = -1) {
   let v = (compIdx === -1) ? (voti[alunno]?.[materia] ?? 0) : (votiFacoltativi[alunno]?.[compIdx]?.[materia] ?? 0);
   let opts = `<option value="0">${isChar ? '* da compilare' : ''}</option>`;
   for (let i=1;i<=4;i++) opts += `<option value="${i}" ${v===i?'selected':''}>${i} — ${LIVELLI[i]}</option>`;
-  return `<select class="voto-select" onchange="setVoto('${alunno.replace(/'/g,"\\\\'")}','${materia}',+this.value, ${isChar}, ${compIdx})">${opts}</select>`;
+
+  let isDisabilitato = false;
+  if (window.utentePermessi) {
+    const seiCoordinatore = window.utentePermessi.isCoordinatore;
+    const materiaTua = window.utentePermessi.materieAbilitate.includes(materia);
+    isDisabilitato = !(seiCoordinatore || materiaTua);
+  }
+
+  return `<select class="voto-select" ${isDisabilitato ? 'disabled' : ''} onchange="setVoto('${alunno.replace(/'/g,"\\\\'")}','${materia}',+this.value, ${isChar}, ${compIdx})">${opts}</select>`;
 }
 
 function setVoto(alunno, materia, val, isChar, compIdx) {
@@ -483,7 +513,35 @@ document.getElementById('alunni-grid').addEventListener('click', e => {
   if (btn) toggleIRC(alunni[+btn.dataset.idx]);
 });
 
-window.onload = avviaApp; // Fa partire tutto appena si apre la pagina
+const auth = firebase.auth();
+auth.onAuthStateChanged(user => {
+  if (user) {
+    if (user.email.endsWith("@" + DOMINIO_SCUOLA)) {
+      try {
+        const permessi = getPermessiDocente(user.email, CLASSE_ATTUALE);
+        if (permessi && permessi.ok) {
+          window.utentePermessi = permessi;
+          document.getElementById('login-overlay').style.display = 'none';
+          document.getElementById('btn-logout').style.display = 'flex';
+          document.getElementById('header-classe').textContent = `Classe ${CLASSE_ATTUALE} - Accesso: ${user.email}`;
+          avviaApp();
+        } else {
+          alert("Accesso riservato: il docente non risulta assegnato al Consiglio di Classe di questa sezione.");
+          window.location.href = "index.html";
+        }
+      } catch (e) {
+        console.error("Errore permessi:", e);
+        alert("Errore critico caricamento permessi.");
+      }
+    } else {
+      auth.signOut();
+      alert("Accesso negato: account non istituzionale.");
+    }
+  } else {
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('btn-logout').style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>
