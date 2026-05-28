@@ -788,35 +788,40 @@ function getPermessiDocente(emailUtente, classeSelezionata) {
   }
 }
 document.addEventListener("DOMContentLoaded", function() {
-  // Controlla se non siamo nell'Hub (index.html)
   if (!window.location.pathname.includes("index.html")) {
+    // 1. Crea un contenitore per i bottoni di navigazione
+    const navContainer = document.createElement('div');
+    navContainer.id = "nav-container";
+    navContainer.style.display = "flex";
+    navContainer.style.gap = "10px";
+    navContainer.style.marginRight = "20px"; // Spazio dal bordo destro
+
+    // 2. Crea il bottone
     const btn = document.createElement('button');
-    btn.innerText = "← Torna all'Hub";
-    
-    // Stile ottimizzato per integrarsi nell'header senza coprire scritte
-    btn.style.marginLeft = "20px";
+    btn.innerText = "← Hub"; // Scritta più corta per stare meglio
     btn.style.padding = "6px 12px";
-    btn.style.background = "#4b5563"; 
+    btn.style.background = "#4b5563";
     btn.style.color = "white";
     btn.style.border = "none";
     btn.style.borderRadius = "6px";
     btn.style.cursor = "pointer";
-    btn.style.fontFamily = "'IBM Plex Mono', monospace";
-    btn.style.fontSize = "11px";
-    btn.style.fontWeight = "600";
+    btn.style.fontFamily = "inherit";
+    btn.style.fontSize = "12px";
     
-    // Link aggiornato
     btn.onclick = () => window.location.href = "https://ittpanettipitagora.github.io/Competenze/index.html";
     
-    // Inserisce il bottone subito dopo il titolo della classe nell'header
-    const headerLeft = document.querySelector('.header-left');
-    if (headerLeft) {
-      headerLeft.style.display = "flex";
-      headerLeft.style.alignItems = "center";
-      headerLeft.style.gap = "15px";
-      headerLeft.appendChild(btn);
-    } else {
-      document.body.appendChild(btn);
+    navContainer.appendChild(btn);
+
+    // 3. Inserisci il contenitore nell'header in modo intelligente
+    const header = document.querySelector('.app-header');
+    if (header) {
+      // Impostiamo l'header per distribuire gli spazi (flex)
+      header.style.display = "flex";
+      header.style.justifyContent = "space-between"; // Titolo a sx, Bottoni a dx
+      header.style.alignItems = "center";
+      
+      // Aggiunge il contenitore alla fine dell'header
+      header.appendChild(navContainer);
     }
   }
 });
