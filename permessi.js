@@ -787,14 +787,37 @@ function getPermessiDocente(emailUtente, classeSelezionata) {
     };
   }
 }
+document.addEventListener("DOMContentLoaded", function() {
+  // Controlla se non siamo nell'Hub (index.html)
+  if (!window.location.pathname.includes("index.html")) {
+    const btn = document.createElement('button');
+    btn.innerText = "← Torna alle classi";
+    // Stile veloce per il bottone
+    btn.style.position = "fixed";
+    btn.style.top = "10px";
+    btn.style.left = "10px";
+    btn.style.zIndex = "99999";
+    btn.style.padding = "8px 12px";
+    btn.style.background = "#374151";
+    btn.style.color = "white";
+    btn.style.border = "none";
+    btn.style.borderRadius = "6px";
+    btn.style.cursor = "pointer";
+    btn.style.fontFamily = "monospace";
+    
+    btn.onclick = () => window.location.href = "index.html";
+    document.body.appendChild(btn);
+  }
+});
 function doLogin() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  firebase.auth().signInWithPopup(provider).then((result) => {
-    // Il login è avvenuto con successo
-    console.log("Login effettuato:", result.user.email);
-  }).catch((error) => {
-    // Gestione errori
-    console.error("Errore durante il login:", error);
-    alert("Errore durante il login: " + error.message);
+  firebase.auth().signInWithPopup(provider).catch((error) => {
+    alert("Errore nel login: " + error.message);
   });
 }
+firebase.auth().onAuthStateChanged(user => {
+  // Se sei in una pagina classe e non sei loggato, torna all'Hub
+  if (!user && !window.location.pathname.includes("index.html")) {
+    window.location.href = "index.html";
+  }
+});
