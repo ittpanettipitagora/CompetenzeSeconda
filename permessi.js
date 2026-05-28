@@ -798,7 +798,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // 2. Crea il bottone
     const btn = document.createElement('button');
-    btn.innerText = "← Hub"; // Scritta più corta per stare meglio
+    btn.innerText = "← Torna alla scelta delle classi"; // Scritta più corta per stare meglio
     btn.style.padding = "6px 12px";
     btn.style.background = "#4b5563";
     btn.style.color = "white";
