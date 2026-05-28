@@ -789,7 +789,7 @@ function getPermessiDocente(emailUtente, classeSelezionata) {
 }
 document.addEventListener("DOMContentLoaded", function() {
   // Controlla se non siamo nell'Hub (index.html)
-  if (!window.location.pathname.includes("index.html")) {
+  if (!window.location.pathname.includes("https://ittpanettipitagora.github.io/Competenze/index.html")) {
     const btn = document.createElement('button');
     btn.innerText = "← Torna alle classi";
     // Stile veloce per il bottone
@@ -805,7 +805,7 @@ document.addEventListener("DOMContentLoaded", function() {
     btn.style.cursor = "pointer";
     btn.style.fontFamily = "monospace";
     
-    btn.onclick = () => window.location.href = "index.html";
+    btn.onclick = () => window.location.href = "https://ittpanettipitagora.github.io/Competenze/index.html";
     document.body.appendChild(btn);
   }
 });
@@ -817,7 +817,7 @@ function doLogin() {
 }
 firebase.auth().onAuthStateChanged(user => {
   // Se sei in una pagina classe e non sei loggato, torna all'Hub
-  if (!user && !window.location.pathname.includes("index.html")) {
-    window.location.href = "index.html";
+  if (!user && !window.location.pathname.includes("https://ittpanettipitagora.github.io/Competenze/index.html")) {
+    window.location.href = "https://ittpanettipitagora.github.io/Competenze/index.html";
   }
 });
