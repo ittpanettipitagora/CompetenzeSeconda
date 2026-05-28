@@ -789,24 +789,35 @@ function getPermessiDocente(emailUtente, classeSelezionata) {
 }
 document.addEventListener("DOMContentLoaded", function() {
   // Controlla se non siamo nell'Hub (index.html)
-  if (!window.location.pathname.includes("https://ittpanettipitagora.github.io/Competenze/index.html")) {
+  if (!window.location.pathname.includes("index.html")) {
     const btn = document.createElement('button');
-    btn.innerText = "← Torna alle classi";
-    // Stile veloce per il bottone
-    btn.style.position = "fixed";
-    btn.style.top = "10px";
-    btn.style.left = "10px";
-    btn.style.zIndex = "99999";
-    btn.style.padding = "8px 12px";
-    btn.style.background = "#374151";
+    btn.innerText = "← Torna all'Hub";
+    
+    // Stile ottimizzato per integrarsi nell'header senza coprire scritte
+    btn.style.marginLeft = "20px";
+    btn.style.padding = "6px 12px";
+    btn.style.background = "#4b5563"; 
     btn.style.color = "white";
     btn.style.border = "none";
     btn.style.borderRadius = "6px";
     btn.style.cursor = "pointer";
-    btn.style.fontFamily = "monospace";
+    btn.style.fontFamily = "'IBM Plex Mono', monospace";
+    btn.style.fontSize = "11px";
+    btn.style.fontWeight = "600";
     
+    // Link aggiornato
     btn.onclick = () => window.location.href = "https://ittpanettipitagora.github.io/Competenze/index.html";
-    document.body.appendChild(btn);
+    
+    // Inserisce il bottone subito dopo il titolo della classe nell'header
+    const headerLeft = document.querySelector('.header-left');
+    if (headerLeft) {
+      headerLeft.style.display = "flex";
+      headerLeft.style.alignItems = "center";
+      headerLeft.style.gap = "15px";
+      headerLeft.appendChild(btn);
+    } else {
+      document.body.appendChild(btn);
+    }
   }
 });
 function doLogin() {
