@@ -416,14 +416,12 @@ function setVoto(alunno, materia, val, isChar, compIdx) {
   modificheNonSalvate = true;
   aggiornaIndicatoreModifiche();
   if (compIdx === -1) {
-    const oldVal = voti[alunno][materia];
     voti[alunno][materia] = val;
-    // Propaga alle competenze caratterizzanti solo se non sovrascritto manualmente
+    // Propaga SEMPRE alle competenze dove la materia è caratterizzante (★)
+    const materiaIdx = MATERIE.indexOf(materia);
     for (let ci = 0; ci < 8; ci++) {
-      if (COMP_CONFIG[ci].char.includes(MATERIE.indexOf(materia))) {
-        if ((votiFacoltativi[alunno]?.[ci]?.[materia] ?? 0) === oldVal) {
-          votiFacoltativi[alunno][ci][materia] = val;
-        }
+      if (COMP_CONFIG[ci].char.includes(materiaIdx)) {
+        votiFacoltativi[alunno][ci][materia] = val;
       }
     }
     renderGenerale(); renderAllComp();
