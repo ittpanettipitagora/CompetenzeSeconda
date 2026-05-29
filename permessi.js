@@ -7,8 +7,8 @@ const DOMINIO_SCUOLA = "panettipitagora.edu.it";
 // Super admin: accesso completo a tutto + pannello admin
 const SUPER_ADMIN_EMAILS = [
 "alessandra.degaetano@panettipitagora.edu.it",
-"dirigente@panettipitagora.edu.it"
-  //"giuseppe.mastrandrea@panettipitagora.edu.it"
+"dirigente@panettipitagora.edu.it",
+  "giuseppe.mastrandrea@panettipitagora.edu.it"
 ];
 
 // ============================================================
@@ -29,14 +29,7 @@ const DB_DOCENTI = {
     sostegno: false,
     superAdmin: false
   },
-  "giuseppe.mastrandrea@panettipitagora.edu.it": {
-    nome: "Mastrandrea Giuseppe",
-    classi: ["1G", "2G"],
-    materie: ["ITALIANO", "STORIA"],
-    coordinatore: ["1G"],
-    sostegno: false,
-    superAdmin: false
-  },
+ 
   "adriana.pedone@panettipitagora.edu.it": {
     nome: "Pedone Adriana",
     classi: ["2E", "2G"],
