@@ -8,7 +8,7 @@ const DOMINIO_SCUOLA = "panettipitagora.edu.it";
 const SUPER_ADMIN_EMAILS = [
 "alessandra.degaetano@panettipitagora.edu.it",
 "dirigente@panettipitagora.edu.it",
-  "giuseppe.mastrandrea@panettipitagora.edu.it"
+ "giuseppe.mastrandrea@panettipitagora.edu.it"
 ];
 
 // ============================================================
@@ -29,7 +29,6 @@ const DB_DOCENTI = {
     sostegno: false,
     superAdmin: false
   },
- 
   "adriana.pedone@panettipitagora.edu.it": {
     nome: "Pedone Adriana",
     classi: ["2E", "2G"],
@@ -56,8 +55,8 @@ const DB_DOCENTI = {
   },
   "alessandra.degaetano@panettipitagora.edu.it": {
     nome: "De Gaetano Alessandra",
-    classi: ["2G"],
-    materie: ["STA"],
+    classi: ["2G","1A"],
+    materie: ["STA","ED. CIVICA"],
     coordinatore: [],
     sostegno: false,
     superAdmin: false
@@ -118,6 +117,7 @@ const DB_DOCENTI = {
     sostegno: false,
     superAdmin: false
   },
+   
   "annamaria.signorile@panettipitagora.edu.it": {
     nome: "Signorile Annamaria",
     classi: ["1G", "2G"],
@@ -721,7 +721,7 @@ const DB_DOCENTI = {
   "vita.magrone@panettipitagora.edu.it": {
     nome: "Magrone Vita",
     assegnazioni: {
-      "1C": ["CHIMICA", "SCIENZE","GEOGRAFIA"],
+      "1C": ["CHIMICA", "SCIENZE", "GEOGRAFIA"],
       "1D": ["CHIMICA", "GEOGRAFIA", "SCIENZE"],
       "1G": ["CHIMICA", "SCIENZE"],
       "2C": ["CHIMICA", "SCIENZE"],
@@ -754,6 +754,28 @@ const DB_DOCENTI = {
     superAdmin: false
   }
 };
+
+// ============================================================
+// LOGGING ACCESSI E SALVATAGGI
+// ============================================================
+function logAzione(tipo, extra = {}) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  const db = firebase.firestore();
+  db.collection("logs").add({
+    tipo: tipo,
+    email: user.email,
+    nome: user.displayName || '',
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    pagina: window.location.pathname,
+    ...extra
+  }).catch(e => console.warn("Log fallito:", e));
+}
+
+// Log accesso automatico
+firebase.auth().onAuthStateChanged(user => {
+  if (user) logAzione('accesso');
+});
 
 // ============================================================
 // FUNZIONE DI CONTROLLO ACCESSO
