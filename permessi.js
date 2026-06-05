@@ -242,12 +242,13 @@ const DB_DOCENTI = {
     sostegno: false,
     superAdmin: false
   },
- "carmela.degiglio@panettipitagora.edu.it": {
-    nome: "De Giglio Carmela",
-    classi: ["1H", "1I", "2H"],
-    materie: ["ITALIANO", "STORIA"],
-    coordinatore: ["1I"],
-    sostegno: false,
+
+ "carla.saracino@panettipitagora.edu.it": {
+    nome: "Saracino Carla",
+    classi: ["2C"],
+    materie: [],
+    coordinatore: [],
+    sostegno: true,
     superAdmin: false
   },
   "carmela.degiglio@panettipitagora.edu.it": {
