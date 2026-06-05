@@ -62,7 +62,7 @@ const DB_DOCENTI = {
     superAdmin: false
   },
   "claudio.delbasso@panettipitagora.edu.it": {
-    nome: "Giorgio Alfonso",
+    nome: "Claudio Del Basso",
     classi: ["1A", "1B", "2A", "2B"],
     materie: ["IRC"],
     coordinatore: [],
