@@ -61,7 +61,7 @@ const DB_DOCENTI = {
     sostegno: false,
     superAdmin: false
   },
-  "alfonso.giorgio@panettipitagora.edu.it": {
+  "claudio.delbasso@panettipitagora.edu.it": {
     nome: "Giorgio Alfonso",
     classi: ["1A", "1B", "2A", "2B"],
     materie: ["IRC"],
