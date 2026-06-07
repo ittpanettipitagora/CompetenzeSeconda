@@ -128,8 +128,14 @@ const DB_DOCENTI = {
   },
   "annamariagrazia.pascazio@panettipitagora.edu.it": {
     nome: "Pascazio Anna Maria Grazia",
-    classi: ["1A", "1B", "2A", "2I"],
-    materie: ["TTRG"],
+    
+   assegnazioni: {
+      "1A": ["TTRG"],
+      "1B": ["TTRG"],
+      "2I": ["TTRG"],
+      "2A": ["STA"],
+    "2B": ["STA"]
+    },
     coordinatore: [],
     sostegno: false,
     superAdmin: false
