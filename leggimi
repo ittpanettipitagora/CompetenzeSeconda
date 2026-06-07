@@ -1,0 +1,7 @@
+1) l'hanno prossimo controllare nomi alunni con accenti e sostituire l'apostrofo con l'accento
+2) l'apostrofo nel cognome va semplicemente tolto
+3) andreina ha la mail andreina.putignano e non andreinavaleria.putignano
+4) paola de marzo ha mail al contrario demarzo.paola
+5) per le seconde basterà cambiare const dati alunni 
+6) per le prime bisogna definire le competenze nelle prime per i vari indirizzi
+7) da 6) devo usare uno schema tipo quello usato per pulito, magrone, lamantia
